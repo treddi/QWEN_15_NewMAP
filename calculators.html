@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Calculator | World Time Converter</title>
+    <style>
+        :root {
+            --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
+            --card-bg: #1e293b;
+            --card-border: #334155;
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --accent: #8b5cf6;
+            --accent-hover: #7c3aed;
+            --accent-glow: rgba(139, 92, 246, 0.3);
+            --input-bg: #0f172a;
+            --input-border: #334155;
+            --radius-lg: 16px;
+            --radius-md: 12px;
+            --radius-sm: 8px;
+            --shadow-card: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.2);
+            --font-main: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            
+            /* Calculator Specific */
+            --calc-display-bg: #020617;
+            --calc-display-text: #e2e8f0;
+            --calc-btn-bg: #334155;
+            --calc-btn-hover: #475569;
+            --calc-btn-text: #f8fafc;
+            --calc-op-bg: #8b5cf6;
+            --calc-op-hover: #7c3aed;
+            --calc-op-text: #ffffff;
+            --calc-clear-bg: #ef4444;
+            --calc-clear-hover: #dc2626;
+            --calc-clear-text: #ffffff;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        
+        body { 
+            font-family: var(--font-main); 
+            background: var(--bg-gradient); 
+            color: var(--text-primary); 
+            line-height: 1.6; 
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 40px 20px;
+        }
+
+        .container { max-width: 420px; width: 100%; }
+
+        /* Back Link */
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 24px;
+            margin-bottom: 30px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.95rem;
+            font-weight: 500;
+            border: 1px solid var(--card-border);
+            border-radius: var(--radius-sm);
+            background: rgba(30, 41, 59, 0.8);
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+            align-self: flex-start;
+        }
+
+        .back-link:hover {
+            color: var(--accent);
+            border-color: var(--accent);
+            background: rgba(139, 92, 246, 0.15);
+            transform: translateX(-3px);
+            box-shadow: 0 4px 12px rgba(139, 92, 246, 0.2);
+        }
+
+        .back-link svg {
+            width: 18px;
+            height: 18px;
+            transition: transform 0.3s ease;
+        }
+
+        .back-link:hover svg {
+            transform: translateX(-3px);
+        }
+
+        /* Header */
+        header { text-align: center; margin-bottom: 30px; }
+        header h1 { font-size: 1.5rem; font-weight: 600; letter-spacing: -0.025em; margin-bottom: 8px; }
+        header p { color: var(--text-secondary); font-size: 0.9rem; }
+
+        /* Calculator Card Container */
+        .calc-card { 
+            background: var(--card-bg); 
+            padding: 24px; 
+            border-radius: var(--radius-lg); 
+            box-shadow: var(--shadow-card); 
+            border: 1px solid var(--card-border); 
+            backdrop-filter: blur(10px);
+        }
+
+        /* Display Screen */
+        .calc-display { 
+            width: 100%; 
+            background: var(--calc-display-bg); 
+            color: var(--calc-display-text); 
+            font-size: 2.25rem; 
+            text-align: right; 
+            padding: 16px; 
+            border-radius: var(--radius-sm); 
+            margin-bottom: 20px; 
+            min-height: 64px; 
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; 
+            border: 1px solid var(--input-border); 
+            outline: none;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.3);
+        }
+
+        /* Button Grid */
+        .calc-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+        
+        .calc-btn { 
+            padding: 16px; 
+            font-size: 1.25rem; 
+            border: none; 
+            border-radius: var(--radius-sm); 
+            background: var(--calc-btn-bg); 
+            color: var(--calc-btn-text); 
+            cursor: pointer; 
+            transition: all 0.2s ease; 
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .calc-btn:hover { background: var(--calc-btn-hover); transform: translateY(-1px); }
+        .calc-btn:active { transform: translateY(0); }
+
+        /* Operator Buttons (Purple Accent) */
+        .calc-btn.op { 
+            background: var(--calc-op-bg); 
+            color: var(--calc-op-text); 
+            font-weight: 600;
+            box-shadow: 0 2px 8px var(--accent-glow);
+        }
+        .calc-btn.op:hover { background: var(--calc-op-hover); }
+
+        /* Equals Button (Spans 2 columns) */
+        .calc-btn.equals { 
+            grid-column: span 2; 
+            background: var(--accent); 
+            color: #fff; 
+            font-weight: 700;
+            box-shadow: 0 4px 12px var(--accent-glow);
+        }
+        .calc-btn.equals:hover { background: var(--accent-hover); }
+
+        /* Clear Button (Red Accent) */
+        .calc-btn.clear { 
+            background: var(--calc-clear-bg); 
+            color: var(--calc-clear-text); 
+            font-weight: 600;
+        }
+        .calc-btn.clear:hover { background: var(--calc-clear-hover); }
+
+        /* Footer / Info */
+        .calc-footer {
+            margin-top: 16px;
+            text-align: center;
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+        .calc-footer span { opacity: 0.7; }
+
+        /* Responsive Adjustments */
+        @media (max-width: 480px) {
+            body { padding: 20px 10px; }
+            .calc-display { font-size: 1.75rem; padding: 12px; }
+            .calc-btn { padding: 14px; font-size: 1.1rem; }
+            .back-link { 
+                width: 100%; 
+                justify-content: center;
+                margin-bottom: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Back to Homepage Link -->
+        <a href="/" class="back-link">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            </svg>
+            <span>Back to World Time Converter Homepage</span>
+        </a>
+
+        <header>
+            <h1>Simple Calculator</h1>
+            <p>Quick calculations with a clean, dark interface</p>
+        </header>
+
+        <div class="calc-card">
+            <input type="text" id="calc-display" class="calc-display" readonly value="0" aria-label="Calculator display">
+            <div class="calc-grid">
+                <button class="calc-btn clear" onclick="clearCalc()" aria-label="Clear">C</button>
+                <button class="calc-btn op" onclick="appendCalc('(')" aria-label="Open parenthesis">(</button>
+                <button class="calc-btn op" onclick="appendCalc(')')" aria-label="Close parenthesis">)</button>
+                <button class="calc-btn op" onclick="appendCalc('/')" aria-label="Divide">÷</button>
+                
+                <button class="calc-btn" onclick="appendCalc('7')" aria-label="7">7</button>
+                <button class="calc-btn" onclick="appendCalc('8')" aria-label="8">8</button>
+                <button class="calc-btn" onclick="appendCalc('9')" aria-label="9">9</button>
+                <button class="calc-btn op" onclick="appendCalc('*')" aria-label="Multiply">×</button>
+                
+                <button class="calc-btn" onclick="appendCalc('4')" aria-label="4">4</button>
+                <button class="calc-btn" onclick="appendCalc('5')" aria-label="5">5</button>
+                <button class="calc-btn" onclick="appendCalc('6')" aria-label="6">6</button>
+                <button class="calc-btn op" onclick="appendCalc('-')" aria-label="Subtract">−</button>
+                
+                <button class="calc-btn" onclick="appendCalc('1')" aria-label="1">1</button>
+                <button class="calc-btn" onclick="appendCalc('2')" aria-label="2">2</button>
+                <button class="calc-btn" onclick="appendCalc('3')" aria-label="3">3</button>
+                <button class="calc-btn op" onclick="appendCalc('+')" aria-label="Add">+</button>
+                
+                <button class="calc-btn" onclick="appendCalc('0')" aria-label="0">0</button>
+                <button class="calc-btn" onclick="appendCalc('.')" aria-label="Decimal point">.</button>
+                <button class="calc-btn equals" onclick="calculate()" aria-label="Equals">=</button>
+            </div>
+            <div class="calc-footer">
+                <span>Keyboard supported • Enter to calculate</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentInput = '0';
+        const display = document.getElementById('calc-display');
+
+        function updateDisplay() { display.value = currentInput; }
+
+        function appendCalc(value) {
+            if (currentInput === '0' && !isNaN(value)) currentInput = value;
+            else currentInput += value;
+            updateDisplay();
+        }
+
+        function clearCalc() { currentInput = '0'; updateDisplay(); }
+
+        function calculate() {
+            try {
+                let expr = currentInput.replace(/×/g, '*').replace(/÷/g, '/').replace(/−/g, '-');
+                if (!/^[0-9+\-*/().\s]+$/.test(expr)) throw new Error('Invalid');
+                
+                const result = new Function('return ' + expr)();
+                currentInput = String(parseFloat(result.toFixed(10)));
+                updateDisplay();
+            } catch (e) {
+                currentInput = 'Error';
+                updateDisplay();
+                setTimeout(clearCalc, 1200);
+            }
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key >= '0' && e.key <= '9') appendCalc(e.key);
+            else if (e.key === '.') appendCalc('.');
+            else if (e.key === '+' || e.key === '-') appendCalc(e.key);
+            else if (e.key === '*') appendCalc('×');
+            else if (e.key === '/') appendCalc('÷');
+            else if (e.key === 'Enter' || e.key === '=') calculate();
+            else if (e.key === 'Escape' || e.key.toLowerCase() === 'c') clearCalc();
+            else if (e.key === 'Backspace') {
+                currentInput = currentInput.length > 1 ? currentInput.slice(0, -1) : '0';
+                updateDisplay();
+            }
+        });
+    </script>
+</body>
+</html>

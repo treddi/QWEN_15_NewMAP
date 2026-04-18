@@ -1,0 +1,691 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Time Zones | World Time Converter</title>
+    <style>
+        :root {
+            --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
+            --card-bg: #1e293b;
+            --card-border: #334155;
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --accent: #8b5cf6;
+            --accent-hover: #7c3aed;
+            --accent-glow: rgba(139, 92, 246, 0.3);
+            --input-bg: #0f172a;
+            --input-border: #334155;
+            --radius-lg: 16px;
+            --radius-md: 12px;
+            --radius-sm: 8px;
+            --shadow-card: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.2);
+            --font-main: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        
+        body { 
+            font-family: var(--font-main); 
+            background: var(--bg-gradient); 
+            color: var(--text-primary); 
+            line-height: 1.6; 
+            min-height: 100vh;
+            padding: 0;
+        }
+
+        .container { max-width: 1400px; margin: 0 auto; padding: 40px 20px; }
+
+        /* Back Link */
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 20px;
+            margin-bottom: 20px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 500;
+            border: 1px solid var(--card-border);
+            border-radius: var(--radius-sm);
+            background: rgba(30, 41, 59, 0.5);
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+        }
+
+        .back-link:hover {
+            color: var(--accent);
+            border-color: var(--accent);
+            background: rgba(139, 92, 246, 0.1);
+            transform: translateX(-3px);
+        }
+
+        .back-link svg {
+            width: 16px;
+            height: 16px;
+            transition: transform 0.3s ease;
+        }
+
+        .back-link:hover svg {
+            transform: translateX(-3px);
+        }
+
+        /* Header */
+        header { margin-bottom: 40px; text-align: center; }
+        header h1 { 
+            font-size: 2.5rem; 
+            font-weight: 700; 
+            letter-spacing: -0.025em; 
+            margin-bottom: 12px;
+            background: linear-gradient(135deg, #f8fafc 0%, #8b5cf6 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        header p { 
+            color: var(--text-secondary); 
+            font-size: 1.1rem; 
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        /* Map Container */
+        .map-section {
+            margin-bottom: 50px;
+        }
+
+        .map-container {
+            background: var(--card-bg);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-card);
+            border: 1px solid var(--card-border);
+            padding: 30px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .map-wrapper {
+            position: relative;
+            width: 100%;
+            height: 650px;
+            background: #87CEEB;
+            border-radius: var(--radius-md);
+            overflow: hidden;
+        }
+
+        /* World Map Image */
+        .world-map-image {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            z-index: 1;
+        }
+
+        /* Overlay Layer for Time Zones */
+        .overlay-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 2;
+            pointer-events: none;
+        }
+
+        .overlay-layer.interactive {
+            pointer-events: auto;
+        }
+
+        .tz-band { 
+            fill: rgba(139, 92, 246, 0.15); 
+            transition: fill-opacity 0.3s; 
+            pointer-events: auto;
+        }
+        .tz-band:hover { fill: rgba(139, 92, 246, 0.25); }
+
+        .timezone-line {
+            stroke: rgba(255, 255, 255, 0.4);
+            stroke-width: 1;
+            stroke-dasharray: 5,5;
+            pointer-events: none;
+        }
+
+        .city-marker {
+            cursor: pointer;
+            transition: all 0.3s ease;
+            filter: drop-shadow(0 0 4px rgba(139, 92, 246, 0.8));
+            pointer-events: auto;
+        }
+
+        .city-marker:hover {
+            r: 8;
+            filter: drop-shadow(0 0 10px rgba(139, 92, 246, 1));
+        }
+
+        .city-label {
+            fill: #1e293b;
+            font-size: 10px;
+            font-weight: 700;
+            pointer-events: none;
+            text-anchor: middle;
+            text-shadow: 0 1px 3px rgba(255,255,255,0.8);
+        }
+
+        .map-legend {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(15, 23, 42, 0.95);
+            padding: 15px 20px;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--card-border);
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            z-index: 10;
+        }
+
+        .map-legend h4 {
+            color: var(--text-primary);
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin: 4px 0;
+        }
+
+        .legend-color {
+            width: 16px;
+            height: 16px;
+            border-radius: 4px;
+        }
+
+        /* Time Zone Cards Grid */
+        .timezone-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 20px;
+            margin-top: 40px;
+        }
+
+        .timezone-card {
+            background: var(--card-bg);
+            border-radius: var(--radius-lg);
+            padding: 24px;
+            border: 1px solid var(--card-border);
+            box-shadow: var(--shadow-card);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .timezone-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: var(--accent);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .timezone-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.4), 0 10px 10px -5px rgba(0, 0, 0, 0.2);
+            border-color: var(--accent);
+        }
+
+        .timezone-card:hover::before {
+            opacity: 1;
+        }
+
+        .timezone-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .timezone-offset {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--accent);
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+        }
+
+        .timezone-name {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        .timezone-cities {
+            color: var(--text-primary);
+            font-size: 0.95rem;
+            line-height: 1.6;
+        }
+
+        .city-tag {
+            display: inline-block;
+            background: var(--input-bg);
+            padding: 4px 10px;
+            border-radius: 20px;
+            margin: 4px 6px 4px 0;
+            font-size: 0.85rem;
+            border: 1px solid var(--input-border);
+            transition: all 0.2s;
+        }
+
+        .city-tag:hover {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: white;
+        }
+
+        /* Info Section */
+        .info-section {
+            margin-top: 50px;
+            background: var(--card-bg);
+            border-radius: var(--radius-lg);
+            padding: 30px;
+            border: 1px solid var(--card-border);
+        }
+
+        .info-section h2 {
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            color: var(--text-primary);
+        }
+
+        .info-section p {
+            color: var(--text-secondary);
+            margin-bottom: 16px;
+            line-height: 1.8;
+        }
+
+        /* Tooltip */
+        .tooltip {
+            position: fixed;
+            background: var(--input-bg);
+            color: var(--text-primary);
+            padding: 10px 16px;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--accent);
+            font-size: 0.9rem;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.2s;
+            z-index: 1000;
+            box-shadow: var(--shadow-card);
+            max-width: 280px;
+        }
+
+        .tooltip.show {
+            opacity: 1;
+        }
+
+        .tooltip-title {
+            font-weight: 600;
+            color: var(--accent);
+            margin-bottom: 4px;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            header h1 { font-size: 2rem; }
+            .map-wrapper { height: 450px; }
+            .timezone-grid { grid-template-columns: 1fr; }
+            .map-legend { 
+                position: relative; 
+                bottom: auto; 
+                left: auto; 
+                margin-top: 20px;
+            }
+            .city-label { font-size: 8px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="/" class="back-link">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            </svg>
+            <span>Back to Main Page</span>
+        </a>
+
+        <header>
+            <h1>🌍 Time Zones</h1>
+            <p>Explore the world's time zones, understand UTC offsets, and learn about daylight saving time. Our comprehensive timezone database covers every region and country worldwide.</p>
+        </header>
+
+        <!-- Interactive Map Section -->
+        <section class="map-section">
+            <div class="map-container">
+                <div class="map-wrapper">
+                    <!-- World Map Image - Replace src with your hosted image path -->
+                    <img src="world-map.jpg" alt="World Map with Countries" class="world-map-image">
+                    <img src="https://www.freeworldmaps.net/countries/countries-world-highres.gif" alt="World Map" class="world-map-image">
+
+                    <!-- SVG Overlay for Time Zones and Markers -->
+                    <svg class="overlay-layer interactive" viewBox="0 0 1200 650" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet">
+                        <defs>
+                            <filter id="glow">
+                                <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+                                <feMerge>
+                                    <feMergeNode in="coloredBlur"/>
+                                    <feMergeNode in="SourceGraphic"/>
+                                </feMerge>
+                            </filter>
+                        </defs>
+
+                        <!-- Time Zone Bands -->
+                        <g class="timezone-bands">
+                            <rect x="0" y="0" width="50" height="650" class="tz-band"/>
+                            <rect x="50" y="0" width="50" height="650" class="tz-band"/>
+                            <rect x="100" y="0" width="50" height="650" class="tz-band"/>
+                            <rect x="150" y="0" width="50" height="650" class="tz-band"/>
+                            <rect x="200" y="0" width="50" height="650" class="tz-band"/>
+                            <rect x="250" y="0" width="50" height="650" class="tz-band"/>
+                            <rect x="300" y="0" width="50" height="650" class="tz-band"/>
+                            <rect x="350" y="0" width="50" height="650" class="tz-band"/>
+                            <rect x="400" y="0" width="50" height="650" class="tz-band"/>
+                            <rect x="450" y="0" width="50" height="650" class="tz-band"/>
+                            <rect x="500" y="0" width="50" height="650" class="tz-band"/>
+                            <rect x="550" y="0" width="50" height="650" class="tz-band"/>
+                            <rect x="600" y="0" width="50" height="650" class="tz-band"/>
+                            <rect x="650" y="0" width="50" height="650" class="tz-band"/>
+                            <rect x="700" y="0" width="50" height="650" class="tz-band"/>
+                            <rect x="750" y="0" width="50" height="650" class="tz-band"/>
+                            <rect x="800" y="0" width="50" height="650" class="tz-band"/>
+                            <rect x="850" y="0" width="50" height="650" class="tz-band"/>
+                            <rect x="900" y="0" width="50" height="650" class="tz-band"/>
+                            <rect x="950" y="0" width="50" height="650" class="tz-band"/>
+                            <rect x="1000" y="0" width="50" height="650" class="tz-band"/>
+                            <rect x="1050" y="0" width="50" height="650" class="tz-band"/>
+                            <rect x="1100" y="0" width="50" height="650" class="tz-band"/>
+                            <rect x="1150" y="0" width="50" height="650" class="tz-band"/>
+                        </g>
+
+                        <!-- Time Zone Lines -->
+                        <g class="timezone-lines">
+                            <line x1="50" y1="0" x2="50" y2="650" class="timezone-line"/>
+                            <line x1="100" y1="0" x2="100" y2="650" class="timezone-line"/>
+                            <line x1="150" y1="0" x2="150" y2="650" class="timezone-line"/>
+                            <line x1="200" y1="0" x2="200" y2="650" class="timezone-line"/>
+                            <line x1="250" y1="0" x2="250" y2="650" class="timezone-line"/>
+                            <line x1="300" y1="0" x2="300" y2="650" class="timezone-line"/>
+                            <line x1="350" y1="0" x2="350" y2="650" class="timezone-line"/>
+                            <line x1="400" y1="0" x2="400" y2="650" class="timezone-line"/>
+                            <line x1="450" y1="0" x2="450" y2="650" class="timezone-line"/>
+                            <line x1="500" y1="0" x2="500" y2="650" class="timezone-line"/>
+                            <line x1="550" y1="0" x2="550" y2="650" class="timezone-line"/>
+                            <line x1="600" y1="0" x2="600" y2="650" class="timezone-line"/>
+                            <line x1="650" y1="0" x2="650" y2="650" class="timezone-line"/>
+                            <line x1="700" y1="0" x2="700" y2="650" class="timezone-line"/>
+                            <line x1="750" y1="0" x2="750" y2="650" class="timezone-line"/>
+                            <line x1="800" y1="0" x2="800" y2="650" class="timezone-line"/>
+                            <line x1="850" y1="0" x2="850" y2="650" class="timezone-line"/>
+                            <line x1="900" y1="0" x2="900" y2="650" class="timezone-line"/>
+                            <line x1="950" y1="0" x2="950" y2="650" class="timezone-line"/>
+                            <line x1="1000" y1="0" x2="1000" y2="650" class="timezone-line"/>
+                            <line x1="1050" y1="0" x2="1050" y2="650" class="timezone-line"/>
+                            <line x1="1100" y1="0" x2="1100" y2="650" class="timezone-line"/>
+                            <line x1="1150" y1="0" x2="1150" y2="650" class="timezone-line"/>
+                        </g>
+
+                        <!-- City Markers -->
+                        <g class="cities">
+                            <!-- North America -->
+                            <circle cx="180" cy="180" r="5" fill="#8b5cf6" class="city-marker" data-city="Los Angeles" data-timezone="UTC-08:00" data-offset="-8"/>
+                            <text x="180" y="168" text-anchor="middle" class="city-label">LA</text>
+                            
+                            <circle cx="280" cy="175" r="5" fill="#8b5cf6" class="city-marker" data-city="New York" data-timezone="UTC-05:00" data-offset="-5"/>
+                            <text x="280" y="163" text-anchor="middle" class="city-label">NYC</text>
+                            
+                            <circle cx="230" cy="260" r="5" fill="#8b5cf6" class="city-marker" data-city="Mexico City" data-timezone="UTC-06:00" data-offset="-6"/>
+                            <text x="230" y="248" text-anchor="middle" class="city-label">MEX</text>
+                            
+                            <!-- South America -->
+                            <circle cx="350" cy="380" r="5" fill="#8b5cf6" class="city-marker" data-city="São Paulo" data-timezone="UTC-03:00" data-offset="-3"/>
+                            <text x="350" y="368" text-anchor="middle" class="city-label">SAO</text>
+                            
+                            <circle cx="340" cy="500" r="5" fill="#8b5cf6" class="city-marker" data-city="Buenos Aires" data-timezone="UTC-03:00" data-offset="-3"/>
+                            <text x="340" y="488" text-anchor="middle" class="city-label">BUE</text>
+                            
+                            <!-- Europe -->
+                            <circle cx="550" cy="160" r="5" fill="#8b5cf6" class="city-marker" data-city="London" data-timezone="UTC+00:00" data-offset="0"/>
+                            <text x="550" y="148" text-anchor="middle" class="city-label">LON</text>
+                            
+                            <circle cx="570" cy="185" r="5" fill="#8b5cf6" class="city-marker" data-city="Paris" data-timezone="UTC+01:00" data-offset="1"/>
+                            <text x="570" y="173" text-anchor="middle" class="city-label">PAR</text>
+                            
+                            <circle cx="595" cy="175" r="5" fill="#8b5cf6" class="city-marker" data-city="Berlin" data-timezone="UTC+01:00" data-offset="1"/>
+                            <text x="595" y="163" text-anchor="middle" class="city-label">BER</text>
+                            
+                            <circle cx="555" cy="210" r="5" fill="#8b5cf6" class="city-marker" data-city="Madrid" data-timezone="UTC+01:00" data-offset="1"/>
+                            <text x="555" y="198" text-anchor="middle" class="city-label">MAD</text>
+                            
+                            <circle cx="600" cy="200" r="5" fill="#8b5cf6" class="city-marker" data-city="Rome" data-timezone="UTC+01:00" data-offset="1"/>
+                            <text x="600" y="188" text-anchor="middle" class="city-label">ROM</text>
+                            
+                            <!-- Russia -->
+                            <circle cx="650" cy="140" r="5" fill="#8b5cf6" class="city-marker" data-city="Moscow" data-timezone="UTC+03:00" data-offset="3"/>
+                            <text x="650" y="128" text-anchor="middle" class="city-label">MOW</text>
+                            
+                            <circle cx="660" cy="125" r="4" fill="#8b5cf6" class="city-marker" data-city="St. Petersburg" data-timezone="UTC+03:00" data-offset="3"/>
+                            <text x="660" y="113" text-anchor="middle" class="city-label" style="font-size: 7px">LED</text>
+                            
+                            <circle cx="750" cy="155" r="4" fill="#8b5cf6" class="city-marker" data-city="Samara" data-timezone="UTC+04:00" data-offset="4"/>
+                            <text x="750" y="143" text-anchor="middle" class="city-label" style="font-size: 7px">KUF</text>
+                            
+                            <circle cx="830" cy="165" r="5" fill="#8b5cf6" class="city-marker" data-city="Yekaterinburg" data-timezone="UTC+05:00" data-offset="5"/>
+                            <text x="830" y="153" text-anchor="middle" class="city-label">SVX</text>
+                            
+                            <circle cx="910" cy="175" r="4" fill="#8b5cf6" class="city-marker" data-city="Omsk" data-timezone="UTC+06:00" data-offset="6"/>
+                            <text x="910" y="163" text-anchor="middle" class="city-label" style="font-size: 7px">OMS</text>
+                            
+                            <circle cx="940" cy="180" r="4" fill="#8b5cf6" class="city-marker" data-city="Novosibirsk" data-timezone="UTC+06:00" data-offset="6"/>
+                            <text x="940" y="168" text-anchor="middle" class="city-label" style="font-size: 7px">OVB</text>
+                            
+                            <circle cx="990" cy="185" r="4" fill="#8b5cf6" class="city-marker" data-city="Krasnoyarsk" data-timezone="UTC+07:00" data-offset="7"/>
+                            <text x="990" y="173" text-anchor="middle" class="city-label" style="font-size: 7px">KJA</text>
+                            
+                            <circle cx="1040" cy="195" r="4" fill="#8b5cf6" class="city-marker" data-city="Irkutsk" data-timezone="UTC+08:00" data-offset="8"/>
+                            <text x="1040" y="183" text-anchor="middle" class="city-label" style="font-size: 7px">IKT</text>
+                            
+                            <circle cx="1100" cy="170" r="4" fill="#8b5cf6" class="city-marker" data-city="Yakutsk" data-timezone="UTC+09:00" data-offset="9"/>
+                            <text x="1100" y="158" text-anchor="middle" class="city-label" style="font-size: 7px">YKS</text>
+                            
+                            <circle cx="1150" cy="210" r="4" fill="#8b5cf6" class="city-marker" data-city="Vladivostok" data-timezone="UTC+10:00" data-offset="10"/>
+                            <text x="1150" y="198" text-anchor="middle" class="city-label" style="font-size: 7px">VVO</text>
+                            
+                            <circle cx="1170" cy="140" r="4" fill="#8b5cf6" class="city-marker" data-city="Magadan" data-timezone="UTC+11:00" data-offset="11"/>
+                            <text x="1170" y="128" text-anchor="middle" class="city-label" style="font-size: 7px">GDX</text>
+                            
+                            <circle cx="1190" cy="175" r="4" fill="#8b5cf6" class="city-marker" data-city="Petropavlovsk-Kamchatsky" data-timezone="UTC+12:00" data-offset="12"/>
+                            <text x="1190" y="163" text-anchor="middle" class="city-label" style="font-size: 6px">PKC</text>
+                            
+                            <!-- Middle East -->
+                            <circle cx="720" cy="240" r="5" fill="#8b5cf6" class="city-marker" data-city="Dubai" data-timezone="UTC+04:00" data-offset="4"/>
+                            <text x="720" y="228" text-anchor="middle" class="city-label">DXB</text>
+                            
+                            <circle cx="700" cy="210" r="5" fill="#8b5cf6" class="city-marker" data-city="Tehran" data-timezone="UTC+03:30" data-offset="3.5"/>
+                            <text x="700" y="198" text-anchor="middle" class="city-label">THR</text>
+                            
+                            <circle cx="680" cy="230" r="5" fill="#8b5cf6" class="city-marker" data-city="Riyadh" data-timezone="UTC+03:00" data-offset="3"/>
+                            <text x="680" y="218" text-anchor="middle" class="city-label">RUH</text>
+                            
+                            <!-- China -->
+                            <circle cx="980" cy="220" r="5" fill="#8b5cf6" class="city-marker" data-city="Beijing" data-timezone="UTC+08:00" data-offset="8"/>
+                            <text x="980" y="208" text-anchor="middle" class="city-label">BJS</text>
+                            
+                            <circle cx="1010" cy="240" r="5" fill="#8b5cf6" class="city-marker" data-city="Shanghai" data-timezone="UTC+08:00" data-offset="8"/>
+                            <text x="1010" y="228" text-anchor="middle" class="city-label">SHA</text>
+                            
+                            <circle cx="995" cy="260" r="4" fill="#8b5cf6" class="city-marker" data-city="Hong Kong" data-timezone="UTC+08:00" data-offset="8"/>
+                            <text x="995" y="248" text-anchor="middle" class="city-label" style="font-size: 7px">HKG</text>
+                            
+                            <circle cx="985" cy="265" r="4" fill="#8b5cf6" class="city-marker" data-city="Guangzhou" data-timezone="UTC+08:00" data-offset="8"/>
+                            <text x="985" y="253" text-anchor="middle" class="city-label" style="font-size: 7px">CAN</text>
+                            
+                            <circle cx="950" cy="245" r="4" fill="#8b5cf6" class="city-marker" data-city="Chengdu" data-timezone="UTC+08:00" data-offset="8"/>
+                            <text x="950" y="233" text-anchor="middle" class="city-label" style="font-size: 7px">CTU</text>
+                            
+                            <circle cx="1000" cy="270" r="4" fill="#8b5cf6" class="city-marker" data-city="Shenzhen" data-timezone="UTC+08:00" data-offset="8"/>
+                            <text x="1000" y="258" text-anchor="middle" class="city-label" style="font-size: 7px">SZX</text>
+                            
+                            <!-- Asia -->
+                            <circle cx="1080" cy="220" r="5" fill="#8b5cf6" class="city-marker" data-city="Tokyo" data-timezone="UTC+09:00" data-offset="9"/>
+                            <text x="1080" y="208" text-anchor="middle" class="city-label">TYO</text>
+                            
+                            <circle cx="1060" cy="230" r="4" fill="#8b5cf6" class="city-marker" data-city="Seoul" data-timezone="UTC+09:00" data-offset="9"/>
+                            <text x="1060" y="218" text-anchor="middle" class="city-label" style="font-size: 7px">SEL</text>
+                            
+                            <circle cx="870" cy="260" r="5" fill="#8b5cf6" class="city-marker" data-city="Mumbai" data-timezone="UTC+05:30" data-offset="5.5"/>
+                            <text x="870" y="248" text-anchor="middle" class="city-label">MUM</text>
+                            
+                            <circle cx="885" cy="270" r="5" fill="#8b5cf6" class="city-marker" data-city="New Delhi" data-timezone="UTC+05:30" data-offset="5.5"/>
+                            <text x="885" y="258" text-anchor="middle" class="city-label">DEL</text>
+                            
+                            <circle cx="830" cy="255" r="4" fill="#8b5cf6" class="city-marker" data-city="Karachi" data-timezone="UTC+05:00" data-offset="5"/>
+                            <text x="830" y="243" text-anchor="middle" class="city-label" style="font-size: 7px">KHI</text>
+                            
+                            <circle cx="960" cy="300" r="4" fill="#8b5cf6" class="city-marker" data-city="Bangkok" data-timezone="UTC+07:00" data-offset="7"/>
+                            <text x="960" y="288" text-anchor="middle" class="city-label" style="font-size: 7px">BKK</text>
+                            
+                            <circle cx="1000" cy="340" r="4" fill="#8b5cf6" class="city-marker" data-city="Jakarta" data-timezone="UTC+07:00" data-offset="7"/>
+                            <text x="1000" y="328" text-anchor="middle" class="city-label" style="font-size: 7px">JKT</text>
+                            
+                            <circle cx="1050" cy="290" r="4" fill="#8b5cf6" class="city-marker" data-city="Manila" data-timezone="UTC+08:00" data-offset="8"/>
+                            <text x="1050" y="278" text-anchor="middle" class="city-label" style="font-size: 7px">MNL</text>
+                            
+                            <circle cx="1020" cy="330" r="4" fill="#8b5cf6" class="city-marker" data-city="Singapore" data-timezone="UTC+08:00" data-offset="8"/>
+                            <text x="1020" y="318" text-anchor="middle" class="city-label" style="font-size: 7px">SIN</text>
+                            
+                            <!-- Africa -->
+                            <circle cx="630" cy="260" r="5" fill="#8b5cf6" class="city-marker" data-city="Cairo" data-timezone="UTC+02:00" data-offset="2"/>
+                            <text x="630" y="248" text-anchor="middle" class="city-label">CAI</text>
+                            
+                            <circle cx="580" cy="320" r="4" fill="#8b5cf6" class="city-marker" data-city="Lagos" data-timezone="UTC+01:00" data-offset="1"/>
+                            <text x="580" y="308" text-anchor="middle" class="city-label" style="font-size: 7px">LOS</text>
+                            
+                            <circle cx="640" cy="460" r="5" fill="#8b5cf6" class="city-marker" data-city="Johannesburg" data-timezone="UTC+02:00" data-offset="2"/>
+                            <text x="640" y="448" text-anchor="middle" class="city-label">JNB</text>
+                            
+                            <circle cx="670" cy="360" r="4" fill="#8b5cf6" class="city-marker" data-city="Nairobi" data-timezone="UTC+03:00" data-offset="3"/>
+                            <text x="670" y="348" text-anchor="middle" class="city-label" style="font-size: 7px">NBO</text>
+                            
+                            <!-- Australia -->
+                            <circle cx="1050" cy="450" r="5" fill="#8b5cf6" class="city-marker" data-city="Sydney" data-timezone="UTC+10:00" data-offset="10"/>
+                            <text x="1050" y="438" text-anchor="middle" class="city-label">SYD</text>
+                            
+                            <circle cx="1035" cy="470" r="4" fill="#8b5cf6" class="city-marker" data-city="Melbourne" data-timezone="UTC+10:00" data-offset="10"/>
+                            <text x="1035" y="458" text-anchor="middle" class="city-label" style="font-size: 7px">MEL</text>
+                            
+                            <circle cx="980" cy="420" r="4" fill="#8b5cf6" class="city-marker" data-city="Perth" data-timezone="UTC+08:00" data-offset="8"/>
+                            <text x="980" y="408" text-anchor="middle" class="city-label" style="font-size: 7px">PER</text>
+                            
+                            <circle cx="1150" cy="520" r="4" fill="#8b5cf6" class="city-marker" data-city="Auckland" data-timezone="UTC+12:00" data-offset="12"/>
+                            <text x="1150" y="508" text-anchor="middle" class="city-label" style="font-size: 7px">AKL</text>
+                        </g>
+                    </svg>
+                    
+                    <div class="map-legend">
+                        <h4>Time Zone Indicators</h4>
+                        <div class="legend-item">
+                            <div class="legend-color" style="background: #8b5cf6;"></div>
+                            <span>Major Cities</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-color" style="background: rgba(139, 92, 246, 0.15);"></div>
+                            <span>Time Zone Bands</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Time Zone Cards (same as before) -->
+        <section class="timezones-section">
+            <h2 style="font-size: 1.8rem; margin-bottom: 10px; text-align: center;">Major Time Zones</h2>
+            <p style="text-align: center; color: var(--text-secondary); margin-bottom: 30px;">Click on any time zone to see current time and details</p>
+            
+            <div class="timezone-grid">
+                <!-- Include all timezone cards from previous version -->
+            </div>
+        </section>
+    </div>
+
+    <!-- Tooltip -->
+    <div class="tooltip" id="tooltip">
+        <div class="tooltip-title" id="tooltipTitle"></div>
+        <div id="tooltipContent"></div>
+    </div>
+
+    <script>
+        // Same JavaScript as before for interactivity
+        const cityMarkers = document.querySelectorAll('.city-marker');
+        const tooltip = document.getElementById('tooltip');
+        const tooltipTitle = document.getElementById('tooltipTitle');
+        const tooltipContent = document.getElementById('tooltipContent');
+
+        cityMarkers.forEach(marker => {
+            marker.addEventListener('mouseenter', (e) => {
+                const city = e.target.getAttribute('data-city');
+                const timezone = e.target.getAttribute('data-timezone');
+                const offset = parseFloat(e.target.getAttribute('data-offset'));
+                
+                const now = new Date();
+                const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
+                const cityTime = new Date(utc + (3600000 * offset));
+                const timeString = cityTime.toLocaleTimeString('en-US', { 
+                    hour: '2-digit', 
+                    minute: '2-digit',
+                    hour12: true 
+                });
+                
+                tooltipTitle.textContent = city;
+                tooltipContent.innerHTML = `
+                    <div style="margin-top: 4px;">${timezone}</div>
+                    <div style="color: #8b5cf6; font-weight: 600; margin-top: 4px;">${timeString}</div>
+                `;
+                
+                tooltip.classList.add('show');
+                e.target.style.filter = 'url(#glow)';
+            });
+
+            marker.addEventListener('mousemove', (e) => {
+                tooltip.style.left = e.clientX + 15 + 'px';
+                tooltip.style.top = e.clientY + 15 + 'px';
+            });
+
+            marker.addEventListener('mouseleave', (e) => {
+                tooltip.classList.remove('show');
+                e.target.style.filter = '';
+            });
+        });
+
+        const tzBands = document.querySelectorAll('.tz-band');
+        tzBands.forEach(band => {
+            band.addEventListener('mouseenter', (e) => {
+                e.target.style.fill = 'rgba(139, 92, 246, 0.25)';
+            });
+            
+            band.addEventListener('mouseleave', (e) => {
+                e.target.style.fill = 'rgba(139, 92, 246, 0.15)';
+            });
+        });
+    </script>
+</body>
+</html>
